@@ -327,8 +327,7 @@ JS
                                 foreach ($validationResult->getMessages() as $message) {
                                     $form->sessionMessage($message['message'], ValidationResult::TYPE_ERROR);
                                 }
-                                Controller::curr()->redirectBack();
-                                return null;
+                                return Controller::curr()->redirectBack();
                             }
                             /** @var AssetContainer|File $file */
                             $file = $upload->getFile();
