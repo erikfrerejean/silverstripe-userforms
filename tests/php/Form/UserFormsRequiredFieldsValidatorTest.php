@@ -5,11 +5,12 @@ namespace SilverStripe\UserForms\Tests\Form;
 use SilverStripe\CMS\Controllers\ModelAsController;
 use SilverStripe\Dev\Debug;
 use SilverStripe\Dev\SapphireTest;
-use SilverStripe\UserForms\Form\UserFormsRequiredFields;
+use SilverStripe\UserForms\Form\UserFormsRequiredFieldsValidator;
 use SilverStripe\UserForms\Model\UserDefinedForm;
 use SilverStripe\UserForms\Form\UserForm;
+use PHPUnit\Framework\Attributes\DataProvider;
 
-class UserFormsRequiredFieldsTest extends SapphireTest
+class UserFormsRequiredFieldsValidatorTest extends SapphireTest
 {
     protected static $fixture_file = '../UserFormsTest.yml';
 
@@ -20,16 +21,16 @@ class UserFormsRequiredFieldsTest extends SapphireTest
         return $form->getValidator();
     }
 
-    public function testUsesUserFormsRequiredFieldsValidator()
+    public function testUsesUserFormsRequiredFormFieldsValidator()
     {
         $page = $this->objFromFixture(UserDefinedForm::class, 'required-custom-rules-form');
         $this->assertEquals(3, $page->Fields()->count());
         $validator = $this->getValidatorFromPage($page);
         $this->assertNotNull($validator);
-        $this->assertInstanceOf(UserFormsRequiredFields::class, $validator, 'Uses UserFormsRequiredFields validator');
+        $this->assertInstanceOf(UserFormsRequiredFieldsValidator::class, $validator, 'Uses UserFormsRequiredFieldsValidator validator');
     }
 
-    public function dataProviderValidationOfConditionalRequiredFields()
+    public static function dataProviderValidationOfConditionalRequiredFields()
     {
         return [
             'Passes when non-conditional required field has a value' => [
@@ -62,8 +63,8 @@ class UserFormsRequiredFieldsTest extends SapphireTest
     /**
      * @param $data
      * @param $expected
-     * @dataProvider dataProviderValidationOfConditionalRequiredFields
      */
+    #[DataProvider('dataProviderValidationOfConditionalRequiredFields')]
     public function testValidationOfConditionalRequiredFields($data, $expected)
     {
         $page = $this->objFromFixture(UserDefinedForm::class, 'required-custom-rules-form');
@@ -78,7 +79,7 @@ class UserFormsRequiredFieldsTest extends SapphireTest
         $this->assertEquals($expected, $validator->php($data));
     }
 
-    public function dataProviderValidationOfNestedConditionalRequiredFields()
+    public static function dataProviderValidationOfNestedConditionalRequiredFields()
     {
         return [
             'Fails when non-conditional required field is empty' => [[], false],
@@ -133,8 +134,8 @@ class UserFormsRequiredFieldsTest extends SapphireTest
     /**
      * @param string $data
      * @param array $expected
-     * @dataProvider dataProviderValidationOfNestedConditionalRequiredFields
      */
+    #[DataProvider('dataProviderValidationOfNestedConditionalRequiredFields')]
     public function testValidationOfNestedConditionalRequiredFields($data, $expected)
     {
         $page = $this->objFromFixture(UserDefinedForm::class, 'required-nested-custom-rules-form');

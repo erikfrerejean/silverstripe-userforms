@@ -6,13 +6,12 @@ use InvalidArgumentException;
 use SilverStripe\Dev\Debug;
 use SilverStripe\Forms\FileField;
 use SilverStripe\Forms\FormField;
-use SilverStripe\Forms\RequiredFields;
-use SilverStripe\ORM\ArrayLib;
+use SilverStripe\Forms\Validation\RequiredFieldsValidator;
+use SilverStripe\Core\ArrayLib;
 use SilverStripe\UserForms\Model\EditableFormField;
-use SilverStripe\Dev\Deprecation;
 
 /**
- * An extension of RequiredFields which handles conditionally required fields.
+ * An extension of RequiredFieldsValidator which handles conditionally required fields.
  *
  * A conditionally required is a field that is required, but can be hidden by display rules.
  * When it is visible, (according to the submitted form data) it will be validated as required.
@@ -20,17 +19,9 @@ use SilverStripe\Dev\Deprecation;
  *
  * Required fields will be validated as usual.
  * Conditionally required fields will be validated IF the display rules are satisfied in the submitted dataset.
- *
- * @deprecated 5.4.0 Will be renamed to SilverStripe\UserForms\Form\UserFormsRequiredFieldsValidator
  */
-class UserFormsRequiredFields extends RequiredFields
+class UserFormsRequiredFieldsValidator extends RequiredFieldsValidator
 {
-    public function __construct()
-    {
-        Deprecation::noticeWithNoReplacment('5.4.0', 'Will be renamed to SilverStripe\\UserForms\\Form\\UserFormsRequiredFieldsValidator', Deprecation::SCOPE_CLASS);
-        parent::__construct(...func_get_args());
-    }
-
     /**
      * Allows validation of fields via specification of a php function for
      * validation which is executed after the form is submitted.
@@ -43,10 +34,6 @@ class UserFormsRequiredFields extends RequiredFields
     {
         $valid = true;
         $fields = $this->form->Fields();
-
-        foreach ($fields as $field) {
-            $valid = ($field->validate($this) && $valid);
-        }
 
         if (empty($this->required)) {
             return $valid;
@@ -106,7 +93,7 @@ class UserFormsRequiredFields extends RequiredFields
     /**
      * Check if the validation rules for the specified field are met by the provided data.
      *
-     * @note Logic replicated from php() method of parent class `SilverStripe\Forms\RequiredFields`
+     * @note Logic replicated from php() method of parent class `SilverStripe\Forms\Validation\RequiredFieldsValidator`
      * @param EditableFormField $field
      * @param array $data
      * @return bool

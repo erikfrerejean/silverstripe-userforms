@@ -36,10 +36,8 @@ class SubmittedFileField extends SubmittedFormField
     /**
      * Return the value of this field for inclusion into things such as
      * reports.
-     *
-     * @return string
      */
-    public function getFormattedValue()
+    public function getFormattedValue(): ?DBField
     {
         $name = $this->getFileName();
         $link = $this->getLink(false);
@@ -52,7 +50,7 @@ class SubmittedFileField extends SubmittedFormField
                     $default = 'You don\'t have the right permissions to download this file';
                     $message = _t(__CLASS__ . '.INSUFFICIENTRIGHTS', $default);
                     return DBField::create_field('HTMLText', sprintf(
-                        '<i class="icon font-icon-lock"></i> %s - <em>%s</em>',
+                        '<span class="icon font-icon-lock" aria-hidden="true"></span> %s - <em>%s</em>',
                         htmlspecialchars($name, ENT_QUOTES),
                         htmlspecialchars($message, ENT_QUOTES)
                     ));
@@ -77,7 +75,7 @@ class SubmittedFileField extends SubmittedFormField
                 ));
             }
         }
-        return false;
+        return null;
     }
 
     /**

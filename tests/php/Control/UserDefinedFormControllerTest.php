@@ -27,9 +27,10 @@ use SilverStripe\UserForms\Model\Submission\SubmittedFormField;
 use SilverStripe\UserForms\Model\UserDefinedForm;
 use SilverStripe\UserForms\Tests\Control\fixtures\SizeStringTestableController;
 use SilverStripe\Versioned\Versioned;
-use SilverStripe\View\ArrayData;
+use SilverStripe\Model\ArrayData;
 use SilverStripe\View\SSViewer;
 use function filesize;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
  * @package userforms
@@ -49,7 +50,7 @@ class UserDefinedFormControllerTest extends FunctionalTest
 
         $config = Config::modify();
         $config->set(UserDefinedFormController::class, 'maximum_email_attachment_size', "1M");
-        $config->merge(SSViewer::class, 'themes', ['simple', '$default']);
+        $config->merge(SSViewer::class, 'themes', ['startup-theme', '$default']);
     }
 
     protected function tearDown(): void
@@ -154,7 +155,7 @@ class UserDefinedFormControllerTest extends FunctionalTest
             'required-email' => 'invalid',
             'required-text' => 'bob'
         ]);
-        $this->assertStringContainsString('Please enter an email address', $response->getBody());
+        $this->assertStringContainsString('Invalid email address', $response->getBody());
 
         // Post with only required
         $this->get($form->URLSegment);
@@ -498,7 +499,7 @@ class UserDefinedFormControllerTest extends FunctionalTest
 
         $controller->process($data, $controller->Form());
 
-        $field = EditableFileField::get_by_id($field->ID);
+        $field = EditableFileField::get()->setUseCache(true)->byID($field->ID);
         $filter = [
             'ParentID' => $field->Folder()->ID,
             'Name' => 'testfile.jpg',
@@ -525,7 +526,7 @@ class UserDefinedFormControllerTest extends FunctionalTest
         $this->assertSame(5 * 1024 * 1024, $udfController->getMaximumAllowedEmailAttachmentSize());
     }
 
-    public function getParseByteSizeStringTestValues()
+    public static function getParseByteSizeStringTestValues()
     {
         return [
             ['9846', 9846],
@@ -549,16 +550,14 @@ class UserDefinedFormControllerTest extends FunctionalTest
         ];
     }
 
-    /**
-     * @dataProvider getParseByteSizeStringTestValues
-     */
+    #[DataProvider('getParseByteSizeStringTestValues')]
     public function testParseByteSizeString($input, $expectedOutput)
     {
         $controller = new SizeStringTestableController(); // extends UserDefinedFormController
         $this->assertSame($expectedOutput, $controller->convertSizeStringToBytes($input));
     }
 
-    public function getParseByteSizeStringTestBadValues()
+    public static function getParseByteSizeStringTestBadValues()
     {
         return [
             ['1234b'],
@@ -572,9 +571,9 @@ class UserDefinedFormControllerTest extends FunctionalTest
     }
 
     /**
-     * @dataProvider getParseByteSizeStringTestBadValues
      * @expectedException \InvalidArgumentException
      */
+    #[DataProvider('getParseByteSizeStringTestBadValues')]
     public function testParseByteSizeStringBadValuesThrowException($input)
     {
         $this->expectException('\InvalidArgumentException');
@@ -582,28 +581,53 @@ class UserDefinedFormControllerTest extends FunctionalTest
         $controller->convertSizeStringToBytes($input);
     }
 
-    public function provideValidEmailsToArray()
+    public static function provideValidEmailsToArray()
     {
         return [
-            [[], [null]],
-            [[], [' , , ']],
-            [[], ['broken.email, broken@.email, broken2.@email']],
             [
-                ['broken@email', 'correctemail@email.com'],
-                [', broken@email, email@-email.com,correctemail@email.com,']
+                'input' => [
+                    null
+                ],
+                'expected' => [],
             ],
             [
-                ['correctemail1@email.com', 'correctemail2@email.com', 'correctemail3@email.com'],
-                ['correctemail1@email.com, correctemail2@email.com, correctemail3@email.com']
+                'input' => [
+                    ' , , '
+                ],
+                'expected' => [],
+            ],
+            [
+                'input' => [
+                    'broken.email, broken@.email, broken2.@email'
+                ],
+                'expected' => [],
+            ],
+            [
+                'input' => [
+                    ', broken@email, email@-email.com,correctemail@email.com,'
+                ],
+                'expected' => [
+                    'correctemail@email.com'
+                ],
+            ],
+            [
+                'input' => [
+                    'correctemail1@email.com, correctemail2@email.com, correctemail3@email.com'
+                ],
+                'expected' => [
+                    'correctemail1@email.com',
+                    'correctemail2@email.com',
+                    'correctemail3@email.com'
+                ],
             ]
         ];
     }
 
     /**
-     * @dataProvider provideValidEmailsToArray
      * Test that provided email is valid
      */
-    public function testValidEmailsToArray(array $expectedOutput, array $input)
+    #[DataProvider('provideValidEmailsToArray')]
+    public function testValidEmailsToArray(array $input, array $expected)
     {
         $class = new ReflectionClass(UserDefinedFormController::class);
         $method = $class->getMethod('validEmailsToArray');
@@ -611,6 +635,6 @@ class UserDefinedFormControllerTest extends FunctionalTest
 
         $controller = new UserDefinedFormController();
 
-        $this->assertEquals($expectedOutput, $method->invokeArgs($controller, $input));
+        $this->assertEquals($expected, $method->invokeArgs($controller, $input));
     }
 }

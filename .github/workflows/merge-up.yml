@@ -1,9 +1,9 @@
 name: Merge-up
 
 on:
-  # At 8:40 AM UTC, only on Wednesday
+  # At 8:40 AM UTC, only on Thursday
   schedule:
-    - cron: '40 8 * * 3'
+    - cron: '40 8 * * 4'
   workflow_dispatch:
 
 permissions: {}
@@ -19,4 +19,4 @@ jobs:
       actions: write
     steps:
       - name: Merge-up
-        uses: silverstripe/gha-merge-up@v1
+        uses: silverstripe/gha-merge-up@v2
